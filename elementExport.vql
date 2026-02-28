@@ -14,6 +14,19 @@ ENTER SINGLE USER MODE;
 CONNECT DATABASE admin;
 
 # #######################################
+# FOLDERS
+# #######################################
+CREATE OR REPLACE FOLDER '/genre_analysis' ;
+
+CREATE OR REPLACE FOLDER '/Phits' ;
+
+CREATE OR REPLACE FOLDER '/spotify_artist_complete' ;
+
+CREATE OR REPLACE FOLDER '/spotify_data' ;
+
+CREATE OR REPLACE FOLDER '/spotify_dataset_playlist' ;
+
+# #######################################
 # RESOURCES
 # #######################################
 # No vault resources
@@ -29,12 +42,14 @@ CONNECT DATABASE admin;
 # DATASOURCES
 # #######################################
 CREATE OR REPLACE DATASOURCE DF hits
+    FOLDER = '/phits'
     ROUTE LOCAL 'LocalConnection' '/home/4778563/hit_songs/Hit Songs/spotify_hits_dataset_complete.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
     COLUMNDELIMITER = '\t'
     ENDOFLINEDELIMITER = '\n'
     HEADER = TRUE;
 
 CREATE OR REPLACE DATASOURCE DF spotify_artist_complete
+    FOLDER = '/spotify_artist_complete'
     ROUTE LOCAL 'LocalConnection' '/home/4778563/artist_data/Artists/spotify_artists_info_complete.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
     CHARSET = 'UTF-8'
     COLUMNDELIMITER = '\t'
@@ -42,12 +57,23 @@ CREATE OR REPLACE DATASOURCE DF spotify_artist_complete
     HEADER = TRUE;
 
 CREATE OR REPLACE DATASOURCE DF spotify_data
+    FOLDER = '/spotify_data'
     ROUTE LOCAL 'LocalConnection' '/home/archive/artists.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
     COLUMNDELIMITER = ','
     ENDOFLINEDELIMITER = '\n'
     HEADER = TRUE;
 
+CREATE OR REPLACE DATASOURCE DF spotify_dataset_playlist
+    FOLDER = '/spotify_dataset_playlist'
+    ROUTE LOCAL 'LocalConnection' '/opt/denodo/data/archive/spotify_dataset.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
+    CHARSET = 'UTF-8'
+    COLUMNDELIMITER = ','
+    ENDOFLINEDELIMITER = '\n'
+    HEADER = TRUE
+    DESCRIPTION = 'Tabla que relaciona artistas y sus canciones con las playlist en las que se encuentran. Artistas en las mismas playlist deben ser recomendados cuando se escucha a uno de ellos';
+
 CREATE OR REPLACE DATASOURCE DF spotify_genre_mapping
+    FOLDER = '/genre_analysis'
     ROUTE LOCAL 'LocalConnection' '/home/4778563/genre_mapping/Genre Mapping/spotify_genre_mapping.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
     COLUMNDELIMITER = '\t'
     ENDOFLINEDELIMITER = '\n'
@@ -66,6 +92,7 @@ ALTER DATABASE admin
 # WRAPPERS
 # #######################################
 CREATE OR REPLACE WRAPPER DF hits
+    FOLDER = '/phits'
     DATASOURCENAME=hits
     OUTPUTSCHEMA (
         song_id = 'song_id',
@@ -95,6 +122,7 @@ CREATE OR REPLACE WRAPPER DF hits
     );
 
 CREATE OR REPLACE WRAPPER DF spotify_artist_complete
+    FOLDER = '/spotify_artist_complete'
     DATASOURCENAME=spotify_artist_complete
     OUTPUTSCHEMA (
         artist_id = 'artist_id',
@@ -106,6 +134,7 @@ CREATE OR REPLACE WRAPPER DF spotify_artist_complete
     );
 
 CREATE OR REPLACE WRAPPER DF spotify_data
+    FOLDER = '/spotify_data'
     DATASOURCENAME=spotify_data
     OUTPUTSCHEMA (
         artist = 'Artist',
@@ -116,7 +145,18 @@ CREATE OR REPLACE WRAPPER DF spotify_data
         asfeature_0 = 'As feature'
     );
 
+CREATE OR REPLACE WRAPPER DF spotify_dataset_playlist
+    FOLDER = '/spotify_dataset_playlist'
+    DATASOURCENAME=spotify_dataset_playlist
+    OUTPUTSCHEMA (
+        user_id_0 = '"user_id"',
+        artistname_0 = '"artistname"',
+        trackname_0 = '"trackname"',
+        playlistname_0 = '"playlistname"'
+    );
+
 CREATE OR REPLACE WRAPPER DF spotify_genre_mapping
+    FOLDER = '/genre_analysis'
     DATASOURCENAME=spotify_genre_mapping
     OUTPUTSCHEMA (
         original_genre = 'original_genre',
@@ -164,6 +204,7 @@ CREATE OR REPLACE TABLE hits I18N us_pst (
         valence:text,
         tempo:double
     )
+    FOLDER = '/phits'
     DESCRIPTION = 'Métricas y datos alternativos'
     CACHE OFF
     TIMETOLIVEINCACHE DEFAULT
@@ -208,6 +249,9 @@ CREATE OR REPLACE TABLE spotify_artist_complete I18N us_pst (
         genres:text,
         image_url:text
     )
+    FOLDER = '/spotify_artist_complete'
+    DESCRIPTION = 'Datos sobre artistas
+(genero,nombre, popularidad..)'
     CACHE OFF
     TIMETOLIVEINCACHE DEFAULT
     ADD SEARCHMETHOD spotify_artist_complete(
@@ -233,6 +277,7 @@ CREATE OR REPLACE TABLE spotify_data I18N us_pst (
         solo:float,
         asfeature_0:float
     )
+    FOLDER = '/spotify_data'
     DESCRIPTION = 'Vista analítica que identifica tendencias musicales actuales comparando streams históricos vs diarios'
     CACHE OFF
     TIMETOLIVEINCACHE DEFAULT
@@ -251,10 +296,34 @@ CREATE OR REPLACE TABLE spotify_data I18N us_pst (
         WRAPPER (df spotify_data)
     );
 
+CREATE OR REPLACE TABLE spotify_dataset_playlist I18N us_pst (
+        user_id_0:text,
+        artistname_0:text,
+        trackname_0:text,
+        playlistname_0:text
+    )
+    FOLDER = '/spotify_dataset_playlist'
+    CACHE OFF
+    TIMETOLIVEINCACHE DEFAULT
+    ADD SEARCHMETHOD spotify_dataset_playlist(
+        I18N us_pst
+        CONSTRAINTS (
+             ADD user_id_0 NOS ZERO ()
+             ADD artistname_0 NOS ZERO ()
+             ADD trackname_0 NOS ZERO ()
+             ADD playlistname_0 NOS ZERO ()
+        )
+        OUTPUTLIST (artistname_0, playlistname_0, trackname_0, user_id_0
+        )
+        WRAPPER (df spotify_dataset_playlist)
+    );
+
 CREATE OR REPLACE TABLE spotify_genre_mapping I18N us_pst (
         original_genre:text,
         mapped_genre:text
     )
+    FOLDER = '/genre_analysis'
+    DESCRIPTION = 'mapeado de generos, con genero actual y de donde proviene'
     CACHE OFF
     TIMETOLIVEINCACHE DEFAULT
     ADD SEARCHMETHOD spotify_genre_mapping(
@@ -271,7 +340,7 @@ CREATE OR REPLACE TABLE spotify_genre_mapping I18N us_pst (
 # #######################################
 # VIEWS
 # #######################################
-CREATE OR REPLACE VIEW p_hits (
+CREATE OR REPLACE VIEW p_hits FOLDER = '/phits' (
     song_id (description = 'id de cancion'),
     song_name (description = 'nombre de cancion'),
     artist_id (description = 'id de artista'),
@@ -303,7 +372,7 @@ CREATE OR REPLACE VIEW p_hits (
 ALTER VIEW p_hits
  LAYOUT (hits = [20, 20, 200, 200]);
 
-CREATE OR REPLACE VIEW p_spotify_artist_complete (
+CREATE OR REPLACE VIEW p_spotify_artist_complete FOLDER = '/spotify_artist_complete' (
     artist_id (description = 'id artista'),
     name (description = 'nombre artista'),
     followers (description = 'numero de seguidores
@@ -317,7 +386,7 @@ CREATE OR REPLACE VIEW p_spotify_artist_complete (
 ALTER VIEW p_spotify_artist_complete
  LAYOUT (spotify_artist_complete = [20, 20, 200, 200]);
 
-CREATE OR REPLACE VIEW p_spotify_data (
+CREATE OR REPLACE VIEW p_spotify_data FOLDER = '/spotify_data' (
     artist (description = 'Nombre completo del artista o grupo musical.
 
 '),
@@ -342,7 +411,7 @@ CREATE OR REPLACE VIEW p_spotify_data (
 ALTER VIEW p_spotify_data
  LAYOUT (spotify_data = [56, 20, 200, 200]);
 
-CREATE OR REPLACE VIEW p_p_hits (
+CREATE OR REPLACE VIEW p_p_hits FOLDER = '/phits' (
     avg_danceability (description = 'Indica qué tan adecuada es un artista para bailar basándose en elementos musicales. 1.0 es el máximo'),
     avg_energy (description = 'energia media de un artista'),
     avg_tempo (description = 'indica el tempo medio de un artista')
@@ -352,10 +421,19 @@ CREATE OR REPLACE VIEW p_p_hits (
 ALTER VIEW p_p_hits
  LAYOUT (p_hits = [20, 20, 200, 200]);
 
-CREATE OR REPLACE VIEW p_p_hits_j_spotify_data_j_p_spotify_artist_complete_j_spotify_genre_mapping AS SELECT spotify_data.artist AS artist, spotify_data.streams AS streams, spotify_data.daily AS daily, spotify_data.aslead_0 AS aslead_0, spotify_data.solo AS solo, spotify_data.asfeature_0 AS asfeature_0, p_p_hits.artist_clean AS artist_clean, p_p_hits.avg_danceability AS avg_danceability, p_spotify_artist_complete.artist_id AS artist_id, p_spotify_artist_complete.name AS name, p_spotify_artist_complete.followers AS followers, p_spotify_artist_complete.popularity AS popularity, p_spotify_artist_complete.genres AS genres, p_spotify_artist_complete.image_url AS image_url, p_spotify_artist_complete.clean_genre AS clean_genre, spotify_genre_mapping.original_genre AS original_genre, spotify_genre_mapping.mapped_genre AS mapped_genre FROM (p_spotify_artist_complete AS p_spotify_artist_complete INNER JOIN (p_p_hits AS p_p_hits INNER JOIN spotify_data AS spotify_data ON p_p_hits.artist_clean = spotify_data.artist ) ON p_spotify_artist_complete.name = spotify_data.artist ) INNER JOIN spotify_genre_mapping AS spotify_genre_mapping ON p_spotify_artist_complete.genres = spotify_genre_mapping.mapped_genre ;
+CREATE OR REPLACE VIEW todos_los_joins (
+    original_genre (description = 'genero original
+'),
+    mapped_genre (description = 'genero moderno que origina de uno original'),
+    user_id_0 (description = 'user id'),
+    artistname_0 (description = 'nombre del artista'),
+    trackname_0 (description = 'nombre de la cancion'),
+    playlistname_0 (description = 'playlist en la que se encuentra')
+ )
+ AS SELECT spotify_data.artist AS artist, spotify_data.streams AS streams, spotify_data.daily AS daily, spotify_data.aslead_0 AS aslead_0, spotify_data.solo AS solo, spotify_data.asfeature_0 AS asfeature_0, p_p_hits.artist_clean AS artist_clean, p_p_hits.avg_danceability AS avg_danceability, p_spotify_artist_complete.artist_id AS artist_id, p_spotify_artist_complete.name AS name, p_spotify_artist_complete.followers AS followers, p_spotify_artist_complete.popularity AS popularity, p_spotify_artist_complete.genres AS genres, p_spotify_artist_complete.image_url AS image_url, p_spotify_artist_complete.clean_genre AS clean_genre, spotify_genre_mapping.original_genre AS original_genre, spotify_genre_mapping.mapped_genre AS mapped_genre, spotify_dataset_playlist.user_id_0 AS user_id_0, spotify_dataset_playlist.artistname_0 AS artistname_0, spotify_dataset_playlist.trackname_0 AS trackname_0, spotify_dataset_playlist.playlistname_0 AS playlistname_0 FROM spotify_dataset_playlist AS spotify_dataset_playlist INNER JOIN ((p_spotify_artist_complete AS p_spotify_artist_complete INNER JOIN (p_p_hits AS p_p_hits INNER JOIN spotify_data AS spotify_data ON p_p_hits.artist_clean = spotify_data.artist ) ON p_spotify_artist_complete.name = spotify_data.artist ) INNER JOIN spotify_genre_mapping AS spotify_genre_mapping ON p_spotify_artist_complete.genres = spotify_genre_mapping.mapped_genre ) ON spotify_dataset_playlist.artistname_0 = p_spotify_artist_complete.name ;
 
-ALTER VIEW p_p_hits_j_spotify_data_j_p_spotify_artist_complete_j_spotify_genre_mapping
- LAYOUT (p_p_hits = [47, 183, 200, 200], spotify_data = [359, 58, 200, 200], p_spotify_artist_complete = [538, 313, 200, 200], spotify_genre_mapping = [883, 201, 200, 200]);
+ALTER VIEW todos_los_joins
+ LAYOUT (p_spotify_artist_complete = [538, 313, 200, 200], p_p_hits = [47, 183, 200, 200], spotify_data = [359, 68, 200, 200], spotify_genre_mapping = [883, 201, 200, 200], spotify_dataset_playlist = [303, 402, 200, 200]);
 
 # #######################################
 # ASSOCIATIONS
