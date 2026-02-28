@@ -1,0 +1,302 @@
+﻿# REQUIRES-PROPERTIES-FILE - # Do not remove this comment!
+# 
+# Generated with Denodo Platform 9.4.0.
+
+ENTER SINGLE USER MODE;
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+# 0 ====================================================================
+
+# #######################################
+# DATABASE
+# #######################################
+CONNECT DATABASE admin;
+
+# #######################################
+# RESOURCES
+# #######################################
+# No vault resources
+# #######################################
+# LISTENERS JMS
+# #######################################
+# No listeners jms
+# #######################################
+# LISTENERS KAFKA
+# #######################################
+# No listeners kafka
+# #######################################
+# DATASOURCES
+# #######################################
+CREATE OR REPLACE DATASOURCE DF cortés
+    ROUTE LOCAL 'LocalConnection' '${databases.admin.datasources.df.cortés.ROUTE.LOCAL.PATH}' URIPATTERN = '' FILENAMEPATTERN = 'C:/Users/saulg/Downloads/archive/artists.csv'
+    COLUMNDELIMITER = ','
+    ENDOFLINEDELIMITER = '\n'
+    HEADER = FALSE;
+
+CREATE OR REPLACE DATASOURCE DF hits
+    ROUTE LOCAL 'LocalConnection' '${databases.admin.datasources.df.hits.ROUTE.LOCAL.PATH}' URIPATTERN = '' FILENAMEPATTERN = '.csv'
+    COLUMNDELIMITER = '\t'
+    ENDOFLINEDELIMITER = '\n'
+    HEADER = TRUE;
+
+CREATE OR REPLACE DATASOURCE DF spotify_data
+    ROUTE LOCAL 'LocalConnection' '${databases.admin.datasources.df.spotify_data.ROUTE.LOCAL.PATH}' URIPATTERN = '' FILENAMEPATTERN = '.csv'
+    COLUMNDELIMITER = ','
+    ENDOFLINEDELIMITER = '\n'
+    HEADER = TRUE;
+
+# #######################################
+# DATABASE CONFIGURATION
+# #######################################
+ALTER DATABASE admin
+  CHARSET DEFAULT;
+
+ALTER DATABASE admin
+  AUTHENTICATION LOCAL;
+
+# #######################################
+# WRAPPERS
+# #######################################
+CREATE OR REPLACE WRAPPER DF hits
+    DATASOURCENAME=hits
+    OUTPUTSCHEMA (
+        song_id = 'song_id',
+        song_name = 'song_name',
+        artist_id = 'artist_id',
+        artist_name = 'artist_name',
+        popularity = 'popularity',
+        explicit = 'explicit',
+        song_type = 'song_type',
+        track_number = 'track_number',
+        num_artists = 'num_artists',
+        num_available_markets = 'num_available_markets',
+        release_date = 'release_date',
+        duration_ms = 'duration_ms',
+        key = 'key',
+        mode = 'mode',
+        time_signature = 'time_signature',
+        acousticness = 'acousticness',
+        danceability = 'danceability',
+        energy = 'energy',
+        instrumentalness = 'instrumentalness',
+        liveness = 'liveness',
+        loudness = 'loudness',
+        speechiness = 'speechiness',
+        valence = 'valence',
+        tempo = 'tempo'
+    );
+
+CREATE OR REPLACE WRAPPER DF spotify_data
+    DATASOURCENAME=spotify_data
+    OUTPUTSCHEMA (
+        artist = 'Artist',
+        streams = 'Streams',
+        daily = 'Daily',
+        aslead_0 = 'As lead',
+        solo = 'Solo',
+        asfeature_0 = 'As feature'
+    );
+
+# #######################################
+# STORED PROCEDURES
+# #######################################
+# No stored procedures
+# #######################################
+# TYPES
+# #######################################
+# No types
+# #######################################
+# MAPS
+# #######################################
+# No maps
+# #######################################
+# BASE VIEWS
+# #######################################
+CREATE OR REPLACE TABLE hits I18N us_pst (
+        song_id:text,
+        song_name:text,
+        artist_id:text,
+        artist_name:text,
+        popularity:text,
+        explicit:text,
+        song_type:text,
+        track_number:text,
+        num_artists:text,
+        num_available_markets:text,
+        release_date:text,
+        duration_ms:text,
+        key:text,
+        mode:text,
+        time_signature:text,
+        acousticness:text,
+        danceability:double,
+        energy:double,
+        instrumentalness:text,
+        liveness:text,
+        loudness:text,
+        speechiness:text,
+        valence:text,
+        tempo:double
+    )
+    DESCRIPTION = 'Métricas y datos alternativos'
+    CACHE OFF
+    TIMETOLIVEINCACHE DEFAULT
+    ADD SEARCHMETHOD hits(
+        I18N us_pst
+        CONSTRAINTS (
+             ADD song_id NOS ZERO ()
+             ADD song_name NOS ZERO ()
+             ADD artist_id NOS ZERO ()
+             ADD artist_name NOS ZERO ()
+             ADD popularity NOS ZERO ()
+             ADD explicit NOS ZERO ()
+             ADD song_type NOS ZERO ()
+             ADD track_number NOS ZERO ()
+             ADD num_artists NOS ZERO ()
+             ADD num_available_markets NOS ZERO ()
+             ADD release_date NOS ZERO ()
+             ADD duration_ms NOS ZERO ()
+             ADD key NOS ZERO ()
+             ADD mode NOS ZERO ()
+             ADD time_signature NOS ZERO ()
+             ADD acousticness NOS ZERO ()
+             ADD danceability NOS ZERO ()
+             ADD energy NOS ZERO ()
+             ADD instrumentalness NOS ZERO ()
+             ADD liveness NOS ZERO ()
+             ADD loudness NOS ZERO ()
+             ADD speechiness NOS ZERO ()
+             ADD valence NOS ZERO ()
+             ADD tempo NOS ZERO ()
+        )
+        OUTPUTLIST (acousticness, artist_id, artist_name, danceability, duration_ms, energy, explicit, instrumentalness, key, liveness, loudness, mode, num_artists, num_available_markets, popularity, release_date, song_id, song_name, song_type, speechiness, tempo, time_signature, track_number, valence
+        )
+        WRAPPER (df hits)
+    );
+
+CREATE OR REPLACE TABLE spotify_data I18N us_pst (
+        artist:text,
+        streams:float,
+        daily:float,
+        aslead_0:float,
+        solo:float,
+        asfeature_0:float
+    )
+    DESCRIPTION = 'Vista analítica que identifica tendencias musicales actuales comparando streams históricos vs diarios'
+    CACHE OFF
+    TIMETOLIVEINCACHE DEFAULT
+    ADD SEARCHMETHOD spotify_data(
+        I18N us_pst
+        CONSTRAINTS (
+             ADD artist NOS ZERO ()
+             ADD streams NOS ZERO ()
+             ADD daily NOS ZERO ()
+             ADD aslead_0 NOS ZERO ()
+             ADD solo NOS ZERO ()
+             ADD asfeature_0 NOS ZERO ()
+        )
+        OUTPUTLIST (artist, asfeature_0, aslead_0, daily, solo, streams
+        )
+        WRAPPER (df spotify_data)
+    );
+
+# #######################################
+# VIEWS
+# #######################################
+CREATE OR REPLACE VIEW p_hits (
+    song_id (description = 'id de cancion'),
+    song_name (description = 'nombre de cancion'),
+    artist_id (description = 'id de artista'),
+    artist_name (description = 'nombre de artista'),
+    popularity (description = 'popularidad'),
+    explicit (description = 'explicito'),
+    song_type (description = 'tipo de cancion'),
+    track_number (description = 'numero de track en album'),
+    num_artists (description = 'numero de artistas'),
+    num_available_markets (description = 'numero de mercados disponibles'),
+    release_date (description = 'fecha de lanzamiento'),
+    duration_ms (description = 'duracion de cancion en milisegundos'),
+    key (description = 'llave'),
+    mode (description = 'modo'),
+    acousticness (description = 'tipo de acustica / como de acustico
+'),
+    danceability (description = 'facilidad para bailarlo'),
+    energy (description = 'energia'),
+    instrumentalness (description = 'cuanto instrumentalidad tiene'),
+    liveness (description = 'disfrutabilidad en directo'),
+    loudness (description = 'como de fuerte suena'),
+    speechiness (description = 'oratoria'),
+    valence (description = 'valencia'),
+    tempo (description = 'tempo'),
+    artist_clean (description = 'nombre artista')
+ )
+ AS SELECT hits.song_id AS song_id, hits.song_name AS song_name, hits.artist_id AS artist_id, hits.artist_name AS artist_name, hits.popularity AS popularity, hits.explicit AS explicit, hits.song_type AS song_type, hits.track_number AS track_number, hits.num_artists AS num_artists, hits.num_available_markets AS num_available_markets, hits.release_date AS release_date, hits.duration_ms AS duration_ms, hits.key AS key, hits.mode AS mode, hits.time_signature AS time_signature, hits.acousticness AS acousticness, hits.danceability AS danceability, hits.energy AS energy, hits.instrumentalness AS instrumentalness, hits.liveness AS liveness, hits.loudness AS loudness, hits.speechiness AS speechiness, hits.valence AS valence, hits.tempo AS tempo, replace(replace(replace(artist_name, '[', ''), ']', ''), '''', '') AS artist_clean FROM hits;
+
+ALTER VIEW p_hits
+ LAYOUT (hits = [20, 20, 200, 200]);
+
+CREATE OR REPLACE VIEW p_spotify_data (
+    artist (description = 'Nombre completo del artista o grupo musical.
+
+'),
+    streams (description = 'Total histórico acumulado de reproducciones del artista en millones.
+'),
+    daily (description = 'Reproducciones obtenidas en el último día registrado en millones. Útil para saber quién es popular actualmente.
+
+'),
+    aslead_0 (description = 'streams como lider de cancion'),
+    solo (description = 'streams como solista de cancion'),
+    asfeature_0 (description = 'streams como invitado en la  cancion'),
+    momentum_index (description = 'Métrica calculada. Cuanto mayor sea el número, mayor es la viralidad actual del artista respecto a su tamaño total.
+'),
+    collab_dependency (description = 'Porcentaje del 0 al 100. Indica qué tanto depende el artista de hacer colaboraciones con otros para tener éxito.
+'),
+    solo_power (description = 'Porcentaje de éxito por sí solos'),
+    bv_anr_investment_matrix (description = 'Indica como de prometedor es un artista
+')
+ )
+ AS SELECT spotify_data.artist AS artist, spotify_data.streams AS streams, spotify_data.daily AS daily, spotify_data.aslead_0 AS aslead_0, spotify_data.solo AS solo, spotify_data.asfeature_0 AS asfeature_0, ((daily/streams)*10000) AS momentum_index, ((asfeature_0/streams)*100) AS collab_dependency, ((solo/streams)*100) AS solo_power, case WHEN (((daily/streams)*10000) > 10) THEN 'High Growth' WHEN (daily > 40) THEN 'Priority' ELSE 'Stable' END AS bv_anr_investment_matrix FROM spotify_data;
+
+ALTER VIEW p_spotify_data
+ LAYOUT (spotify_data = [56, 20, 200, 200]);
+
+CREATE OR REPLACE VIEW p_p_hits (
+    avg_danceability (description = 'Indica qué tan adecuada es una pista para bailar basándose en elementos musicales. 1.0 es el máximo')
+ )
+ AS SELECT artist_clean AS artist_clean, avg(danceability) AS avg_danceability FROM p_hits GROUP BY artist_clean;
+
+ALTER VIEW p_p_hits
+ LAYOUT (p_hits = [20, 20, 200, 200]);
+
+CREATE OR REPLACE VIEW hits_j_spotify_data_j_p_p_hits AS SELECT spotify_data.artist AS artist, spotify_data.streams AS streams, spotify_data.daily AS daily, spotify_data.aslead_0 AS aslead_0, spotify_data.solo AS solo, spotify_data.asfeature_0 AS asfeature_0, p_p_hits.artist_clean AS artist_clean, p_p_hits.avg_danceability AS avg_danceability FROM p_p_hits AS p_p_hits INNER JOIN spotify_data AS spotify_data ON p_p_hits.artist_clean = spotify_data.artist ;
+
+ALTER VIEW hits_j_spotify_data_j_p_p_hits
+ LAYOUT (spotify_data = [273, 69, 200, 200], p_p_hits = [159, 143, 200, 200]);
+
+# #######################################
+# ASSOCIATIONS
+# #######################################
+# No associations
+# #######################################
+# WEBSERVICES
+# #######################################
+# #######################################
+# WEBSERVICES
+# #######################################
+# No web services
+# #######################################
+# WEBCONTAINER WEB SERVICE DEPLOYMENTS
+# #######################################
+# No deployed web services
+# #######################################
+# Closing connection with database admin
+# #######################################
+CLOSE;
+
+
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+EXIT SINGLE USER MODE;
