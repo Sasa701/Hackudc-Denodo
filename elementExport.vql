@@ -1,6 +1,4 @@
-﻿# REQUIRES-PROPERTIES-FILE - # Do not remove this comment!
-# 
-# Generated with Denodo Platform 9.4.0.
+﻿# Generated with Denodo Platform 9.4.0.
 
 ENTER SINGLE USER MODE;
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -30,21 +28,28 @@ CONNECT DATABASE admin;
 # #######################################
 # DATASOURCES
 # #######################################
-CREATE OR REPLACE DATASOURCE DF cortés
-    ROUTE LOCAL 'LocalConnection' '${databases.admin.datasources.df.cortés.ROUTE.LOCAL.PATH}' URIPATTERN = '' FILENAMEPATTERN = 'C:/Users/saulg/Downloads/archive/artists.csv'
-    COLUMNDELIMITER = ','
-    ENDOFLINEDELIMITER = '\n'
-    HEADER = FALSE;
-
 CREATE OR REPLACE DATASOURCE DF hits
-    ROUTE LOCAL 'LocalConnection' '${databases.admin.datasources.df.hits.ROUTE.LOCAL.PATH}' URIPATTERN = '' FILENAMEPATTERN = '.csv'
+    ROUTE LOCAL 'LocalConnection' '/home/4778563/hit_songs/Hit Songs/spotify_hits_dataset_complete.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
+    COLUMNDELIMITER = '\t'
+    ENDOFLINEDELIMITER = '\n'
+    HEADER = TRUE;
+
+CREATE OR REPLACE DATASOURCE DF spotify_artist_complete
+    ROUTE LOCAL 'LocalConnection' '/home/4778563/artist_data/Artists/spotify_artists_info_complete.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
+    CHARSET = 'UTF-8'
     COLUMNDELIMITER = '\t'
     ENDOFLINEDELIMITER = '\n'
     HEADER = TRUE;
 
 CREATE OR REPLACE DATASOURCE DF spotify_data
-    ROUTE LOCAL 'LocalConnection' '${databases.admin.datasources.df.spotify_data.ROUTE.LOCAL.PATH}' URIPATTERN = '' FILENAMEPATTERN = '.csv'
+    ROUTE LOCAL 'LocalConnection' '/home/archive/artists.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
     COLUMNDELIMITER = ','
+    ENDOFLINEDELIMITER = '\n'
+    HEADER = TRUE;
+
+CREATE OR REPLACE DATASOURCE DF spotify_genre_mapping
+    ROUTE LOCAL 'LocalConnection' '/home/4778563/genre_mapping/Genre Mapping/spotify_genre_mapping.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
+    COLUMNDELIMITER = '\t'
     ENDOFLINEDELIMITER = '\n'
     HEADER = TRUE;
 
@@ -89,6 +94,17 @@ CREATE OR REPLACE WRAPPER DF hits
         tempo = 'tempo'
     );
 
+CREATE OR REPLACE WRAPPER DF spotify_artist_complete
+    DATASOURCENAME=spotify_artist_complete
+    OUTPUTSCHEMA (
+        artist_id = 'artist_id',
+        name = 'name',
+        followers = 'followers',
+        popularity = 'popularity',
+        genres = 'genres',
+        image_url = 'image_url'
+    );
+
 CREATE OR REPLACE WRAPPER DF spotify_data
     DATASOURCENAME=spotify_data
     OUTPUTSCHEMA (
@@ -98,6 +114,13 @@ CREATE OR REPLACE WRAPPER DF spotify_data
         aslead_0 = 'As lead',
         solo = 'Solo',
         asfeature_0 = 'As feature'
+    );
+
+CREATE OR REPLACE WRAPPER DF spotify_genre_mapping
+    DATASOURCENAME=spotify_genre_mapping
+    OUTPUTSCHEMA (
+        original_genre = 'original_genre',
+        mapped_genre = 'mapped_genre'
     );
 
 # #######################################
@@ -177,6 +200,31 @@ CREATE OR REPLACE TABLE hits I18N us_pst (
         WRAPPER (df hits)
     );
 
+CREATE OR REPLACE TABLE spotify_artist_complete I18N us_pst (
+        artist_id:text,
+        name:text,
+        followers:int,
+        popularity:text,
+        genres:text,
+        image_url:text
+    )
+    CACHE OFF
+    TIMETOLIVEINCACHE DEFAULT
+    ADD SEARCHMETHOD spotify_artist_complete(
+        I18N us_pst
+        CONSTRAINTS (
+             ADD artist_id NOS ZERO ()
+             ADD name NOS ZERO ()
+             ADD followers NOS ZERO ()
+             ADD popularity NOS ZERO ()
+             ADD genres NOS ZERO ()
+             ADD image_url NOS ZERO ()
+        )
+        OUTPUTLIST (artist_id, followers, genres, image_url, name, popularity
+        )
+        WRAPPER (df spotify_artist_complete)
+    );
+
 CREATE OR REPLACE TABLE spotify_data I18N us_pst (
         artist:text,
         streams:float,
@@ -201,6 +249,23 @@ CREATE OR REPLACE TABLE spotify_data I18N us_pst (
         OUTPUTLIST (artist, asfeature_0, aslead_0, daily, solo, streams
         )
         WRAPPER (df spotify_data)
+    );
+
+CREATE OR REPLACE TABLE spotify_genre_mapping I18N us_pst (
+        original_genre:text,
+        mapped_genre:text
+    )
+    CACHE OFF
+    TIMETOLIVEINCACHE DEFAULT
+    ADD SEARCHMETHOD spotify_genre_mapping(
+        I18N us_pst
+        CONSTRAINTS (
+             ADD original_genre NOS ZERO ()
+             ADD mapped_genre NOS ZERO ()
+        )
+        OUTPUTLIST (mapped_genre, original_genre
+        )
+        WRAPPER (df spotify_genre_mapping)
     );
 
 # #######################################
@@ -238,6 +303,20 @@ CREATE OR REPLACE VIEW p_hits (
 ALTER VIEW p_hits
  LAYOUT (hits = [20, 20, 200, 200]);
 
+CREATE OR REPLACE VIEW p_spotify_artist_complete (
+    artist_id (description = 'id artista'),
+    name (description = 'nombre artista'),
+    followers (description = 'numero de seguidores
+'),
+    popularity (description = 'popularidad'),
+    genres (description = 'genero musical del artista'),
+    image_url (description = 'url de la imagen')
+ )
+ AS SELECT spotify_artist_complete.artist_id AS artist_id, spotify_artist_complete.name AS name, spotify_artist_complete.followers AS followers, spotify_artist_complete.popularity AS popularity, spotify_artist_complete.genres AS genres, spotify_artist_complete.image_url AS image_url, replace(replace(replace(genres, '[', ''), ']', ''), '''', '') AS clean_genre FROM spotify_artist_complete;
+
+ALTER VIEW p_spotify_artist_complete
+ LAYOUT (spotify_artist_complete = [20, 20, 200, 200]);
+
 CREATE OR REPLACE VIEW p_spotify_data (
     artist (description = 'Nombre completo del artista o grupo musical.
 
@@ -264,17 +343,19 @@ ALTER VIEW p_spotify_data
  LAYOUT (spotify_data = [56, 20, 200, 200]);
 
 CREATE OR REPLACE VIEW p_p_hits (
-    avg_danceability (description = 'Indica qué tan adecuada es una pista para bailar basándose en elementos musicales. 1.0 es el máximo')
+    avg_danceability (description = 'Indica qué tan adecuada es un artista para bailar basándose en elementos musicales. 1.0 es el máximo'),
+    avg_energy (description = 'energia media de un artista'),
+    avg_tempo (description = 'indica el tempo medio de un artista')
  )
- AS SELECT artist_clean AS artist_clean, avg(danceability) AS avg_danceability FROM p_hits GROUP BY artist_clean;
+ AS SELECT artist_clean AS artist_clean, avg(danceability) AS avg_danceability, avg(energy) AS avg_energy, avg(tempo) AS avg_tempo FROM p_hits GROUP BY artist_clean;
 
 ALTER VIEW p_p_hits
  LAYOUT (p_hits = [20, 20, 200, 200]);
 
-CREATE OR REPLACE VIEW hits_j_spotify_data_j_p_p_hits AS SELECT spotify_data.artist AS artist, spotify_data.streams AS streams, spotify_data.daily AS daily, spotify_data.aslead_0 AS aslead_0, spotify_data.solo AS solo, spotify_data.asfeature_0 AS asfeature_0, p_p_hits.artist_clean AS artist_clean, p_p_hits.avg_danceability AS avg_danceability FROM p_p_hits AS p_p_hits INNER JOIN spotify_data AS spotify_data ON p_p_hits.artist_clean = spotify_data.artist ;
+CREATE OR REPLACE VIEW p_p_hits_j_spotify_data_j_p_spotify_artist_complete_j_spotify_genre_mapping AS SELECT spotify_data.artist AS artist, spotify_data.streams AS streams, spotify_data.daily AS daily, spotify_data.aslead_0 AS aslead_0, spotify_data.solo AS solo, spotify_data.asfeature_0 AS asfeature_0, p_p_hits.artist_clean AS artist_clean, p_p_hits.avg_danceability AS avg_danceability, p_spotify_artist_complete.artist_id AS artist_id, p_spotify_artist_complete.name AS name, p_spotify_artist_complete.followers AS followers, p_spotify_artist_complete.popularity AS popularity, p_spotify_artist_complete.genres AS genres, p_spotify_artist_complete.image_url AS image_url, p_spotify_artist_complete.clean_genre AS clean_genre, spotify_genre_mapping.original_genre AS original_genre, spotify_genre_mapping.mapped_genre AS mapped_genre FROM (p_spotify_artist_complete AS p_spotify_artist_complete INNER JOIN (p_p_hits AS p_p_hits INNER JOIN spotify_data AS spotify_data ON p_p_hits.artist_clean = spotify_data.artist ) ON p_spotify_artist_complete.name = spotify_data.artist ) INNER JOIN spotify_genre_mapping AS spotify_genre_mapping ON p_spotify_artist_complete.genres = spotify_genre_mapping.mapped_genre ;
 
-ALTER VIEW hits_j_spotify_data_j_p_p_hits
- LAYOUT (spotify_data = [273, 69, 200, 200], p_p_hits = [159, 143, 200, 200]);
+ALTER VIEW p_p_hits_j_spotify_data_j_p_spotify_artist_complete_j_spotify_genre_mapping
+ LAYOUT (p_p_hits = [47, 183, 200, 200], spotify_data = [359, 58, 200, 200], p_spotify_artist_complete = [538, 313, 200, 200], spotify_genre_mapping = [883, 201, 200, 200]);
 
 # #######################################
 # ASSOCIATIONS
