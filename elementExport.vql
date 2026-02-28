@@ -9,12 +9,12 @@ ENTER SINGLE USER MODE;
 # 0 ====================================================================
 
 # #######################################
-# DATABASE
+# DATABASE of admin
 # #######################################
 CONNECT DATABASE admin;
 
 # #######################################
-# FOLDERS
+# FOLDERS of admin
 # #######################################
 CREATE OR REPLACE FOLDER '/genre_analysis' ;
 
@@ -31,19 +31,19 @@ CREATE OR REPLACE FOLDER '/spotify_dataset_playlist' ;
 CREATE OR REPLACE FOLDER '/top50' ;
 
 # #######################################
-# RESOURCES
+# RESOURCES of admin
 # #######################################
-# No vault resources
+# No vault resources in database admin
 # #######################################
-# LISTENERS JMS
+# LISTENERS JMS of admin
 # #######################################
-# No listeners jms
+# No listeners jms in database admin
 # #######################################
-# LISTENERS KAFKA
+# LISTENERS KAFKA of admin
 # #######################################
-# No listeners kafka
+# No listeners kafka in database admin
 # #######################################
-# DATASOURCES
+# DATASOURCES of admin
 # #######################################
 CREATE OR REPLACE DATASOURCE DF hits
     FOLDER = '/phits'
@@ -107,7 +107,7 @@ ALTER DATABASE admin
   AUTHENTICATION LOCAL;
 
 # #######################################
-# WRAPPERS
+# WRAPPERS of admin
 # #######################################
 CREATE OR REPLACE WRAPPER DF hits
     FOLDER = '/phits'
@@ -226,19 +226,19 @@ CREATE OR REPLACE WRAPPER DF top50_from2010_2019
     );
 
 # #######################################
-# STORED PROCEDURES
+# STORED PROCEDURES of admin
 # #######################################
-# No stored procedures
+# No stored procedures in database admin
 # #######################################
-# TYPES
+# TYPES of admin
 # #######################################
-# No types
+# No types in database admin
 # #######################################
-# MAPS
+# MAPS of admin
 # #######################################
-# No maps
+# No maps in database admin
 # #######################################
-# BASE VIEWS
+# BASE VIEWS of admin
 # #######################################
 CREATE OR REPLACE TABLE hits I18N us_pst (
         song_id:text,
@@ -493,7 +493,7 @@ CREATE OR REPLACE TABLE top50_from2010_2019 I18N us_pst (
     );
 
 # #######################################
-# VIEWS
+# VIEWS of admin
 # #######################################
 CREATE OR REPLACE VIEW p_hits FOLDER = '/phits' (
     song_id (description = 'id de cancion'),
@@ -566,6 +566,8 @@ CREATE OR REPLACE VIEW p_spotify_data FOLDER = '/spotify_data' (
 ALTER VIEW p_spotify_data
  LAYOUT (spotify_data = [56, 20, 200, 200]);
 
+CREATE OR REPLACE VIEW rv_songs_enriched AS SELECT artist AS artist_raw, trim(replace(replace(replace(artist, '[', ''), ']', ''), '''', '')) AS artist_name, song, duration_ms, danceability, energy, loudness, speechiness, acousticness, instrumentalness, liveness, valence, tempo, genre AS song_genre, case WHEN ((danceability > 0.7 AND energy > 0.7)) THEN 'High Energy Dance' WHEN (acousticness > 0.8) THEN 'Acoustic/Chill' WHEN (speechiness > 0.6) THEN 'Speech Heavy/Rap' ELSE 'General' END AS audio_profile FROM songs_normalize;
+
 CREATE OR REPLACE VIEW p_p_hits FOLDER = '/phits' (
     avg_danceability (description = 'Indica qué tan adecuada es un artista para bailar basándose en elementos musicales. 1.0 es el máximo'),
     avg_energy (description = 'energia media de un artista'),
@@ -591,20 +593,100 @@ ALTER VIEW todos_los_joins
  LAYOUT (spotify_dataset_playlist = [303, 402, 200, 200], p_spotify_artist_complete = [578, 275, 200, 200], p_p_hits = [47, 183, 200, 200], spotify_data = [359, 68, 200, 200], spotify_genre_mapping = [883, 201, 200, 200], songs_normalize = [197, 275, 200, 200], top50_from2010_2019 = [711, 81, 200, 200]);
 
 # #######################################
-# ASSOCIATIONS
+# ASSOCIATIONS of admin
 # #######################################
-# No associations
+# No associations in database admin
 # #######################################
-# WEBSERVICES
+# WEBSERVICES of admin
 # #######################################
+# No web services in database admin
 # #######################################
-# WEBSERVICES
+# WEBCONTAINER WEB SERVICE DEPLOYMENTS of admin
 # #######################################
-# No web services
+# No deployed web services in database admin
 # #######################################
-# WEBCONTAINER WEB SERVICE DEPLOYMENTS
+# Closing connection with database admin
 # #######################################
-# No deployed web services
+CLOSE;
+
+
+# 1 ====================================================================
+
+# #######################################
+# DATABASE of datos_spoti_inicial
+# #######################################
+CREATE OR REPLACE DATABASE datos_spoti_inicial 'YOYOYOYO AMOR DE RAXET';
+
+CONNECT DATABASE datos_spoti_inicial;
+
+# #######################################
+# RESOURCES of datos_spoti_inicial
+# #######################################
+# No vault resources in database datos_spoti_inicial
+# #######################################
+# LISTENERS JMS of datos_spoti_inicial
+# #######################################
+# No listeners jms in database datos_spoti_inicial
+# #######################################
+# LISTENERS KAFKA of datos_spoti_inicial
+# #######################################
+# No listeners kafka in database datos_spoti_inicial
+# #######################################
+# DATASOURCES of datos_spoti_inicial
+# #######################################
+# No data sources in database datos_spoti_inicial
+# #######################################
+# DATABASE CONFIGURATION
+# #######################################
+ALTER DATABASE datos_spoti_inicial
+  CHARSET DEFAULT;
+
+# #######################################
+# WRAPPERS of datos_spoti_inicial
+# #######################################
+# No wrappers in database datos_spoti_inicial
+# #######################################
+# STORED PROCEDURES of datos_spoti_inicial
+# #######################################
+# No stored procedures in database datos_spoti_inicial
+# #######################################
+# TYPES of datos_spoti_inicial
+# #######################################
+# No types in database datos_spoti_inicial
+# #######################################
+# MAPS of datos_spoti_inicial
+# #######################################
+# No maps in database datos_spoti_inicial
+# #######################################
+# BASE VIEWS of datos_spoti_inicial
+# #######################################
+# No base views in database datos_spoti_inicial
+# #######################################
+# VIEWS of datos_spoti_inicial
+# #######################################
+# No views in database datos_spoti_inicial
+# #######################################
+# ASSOCIATIONS of datos_spoti_inicial
+# #######################################
+# No associations in database datos_spoti_inicial
+# #######################################
+# WEBSERVICES of datos_spoti_inicial
+# #######################################
+# No web services in database datos_spoti_inicial
+# #######################################
+# WEBCONTAINER WEB SERVICE DEPLOYMENTS of datos_spoti_inicial
+# #######################################
+# No deployed web services in database datos_spoti_inicial
+# #######################################
+# Closing connection with database datos_spoti_inicial
+# #######################################
+CLOSE;
+
+# #######################################
+# Connecting to database admin
+# #######################################
+CONNECT DATABASE ADMIN;
+
 # #######################################
 # Closing connection with database admin
 # #######################################
