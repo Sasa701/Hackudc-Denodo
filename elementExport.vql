@@ -47,7 +47,7 @@ CREATE OR REPLACE FOLDER '/top50' ;
 # #######################################
 CREATE OR REPLACE DATASOURCE DF hits
     FOLDER = '/phits'
-    ROUTE LOCAL 'LocalConnection' '/home/4778563/hit_songs/Hit Songs/spotify_hits_dataset_complete.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
+    ROUTE LOCAL 'LocalConnection' '/opt/denodo/data/4778563/hit_songs/Hit Songs/spotify_hits_dataset_complete.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
     COLUMNDELIMITER = '\t'
     ENDOFLINEDELIMITER = '\n'
     HEADER = TRUE;
@@ -69,7 +69,7 @@ CREATE OR REPLACE DATASOURCE DF spotify_artist_complete
 
 CREATE OR REPLACE DATASOURCE DF spotify_data
     FOLDER = '/spotify_data'
-    ROUTE LOCAL 'LocalConnection' '/home/archive/artists.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
+    ROUTE LOCAL 'LocalConnection' '/opt/denodo/data/archive/artists.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
     COLUMNDELIMITER = ','
     ENDOFLINEDELIMITER = '\n'
     HEADER = TRUE;
@@ -85,7 +85,7 @@ CREATE OR REPLACE DATASOURCE DF spotify_dataset_playlist
 
 CREATE OR REPLACE DATASOURCE DF spotify_genre_mapping
     FOLDER = '/genre_analysis'
-    ROUTE LOCAL 'LocalConnection' '/home/4778563/genre_mapping/Genre Mapping/spotify_genre_mapping.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
+    ROUTE LOCAL 'LocalConnection' '/opt/denodo/data/4778563/genre_mapping/Genre Mapping/spotify_genre_mapping.csv' URIPATTERN = '' FILENAMEPATTERN = '.csv'
     COLUMNDELIMITER = '\t'
     ENDOFLINEDELIMITER = '\n'
     HEADER = TRUE;
@@ -243,25 +243,25 @@ CREATE OR REPLACE WRAPPER DF top50_from2010_2019
 CREATE OR REPLACE TABLE hits I18N us_pst (
         song_id:text,
         song_name:text,
-        artist_id:int,
+        artist_id:text,
         artist_name:text,
-        popularity:float,
+        popularity:text,
         explicit:text,
         song_type:text,
-        track_number:int,
-        num_artists:int,
-        num_available_markets:int,
-        release_date:int,
-        duration_ms:double,
-        key:int,
+        track_number:text,
+        num_artists:text,
+        num_available_markets:text,
+        release_date:text,
+        duration_ms:text,
+        key:text,
         mode:text,
         time_signature:text,
-        acousticness:float,
+        acousticness:text,
         danceability:float,
         energy:double,
         instrumentalness:text,
         liveness:text,
-        loudness:float,
+        loudness:text,
         speechiness:text,
         valence:text,
         tempo:double
@@ -356,7 +356,7 @@ CREATE OR REPLACE TABLE songs_normalize I18N us_pst (
 CREATE OR REPLACE TABLE spotify_artist_complete I18N us_pst (
         artist_id:text,
         name:text,
-        followers:int,
+        followers:text,
         popularity:text,
         genres:text,
         image_url:text
@@ -460,7 +460,7 @@ CREATE OR REPLACE TABLE top50_from2010_2019 I18N us_pst (
         loudness:text,
         liveness:text,
         valence:text,
-        length:double,
+        length:text,
         acousticness:text,
         speechiness:text,
         popularity:text
@@ -578,19 +578,10 @@ CREATE OR REPLACE VIEW p_p_hits FOLDER = '/phits' (
 ALTER VIEW p_p_hits
  LAYOUT (p_hits = [20, 20, 200, 200]);
 
-CREATE OR REPLACE VIEW todos_los_joins (
-    original_genre (description = 'genero original
-'),
-    mapped_genre (description = 'genero moderno que origina de uno original'),
-    user_id_0 (description = 'user id'),
-    artistname_0 (description = 'nombre del artista'),
-    trackname_0 (description = 'nombre de la cancion'),
-    playlistname_0 (description = 'playlist en la que se encuentra')
- )
- AS SELECT spotify_data.artist AS artist_data, spotify_data.streams AS streams, spotify_data.daily AS daily, spotify_data.aslead_0 AS aslead_0, spotify_data.solo AS solo, spotify_data.asfeature_0 AS asfeature_0, p_p_hits.artist_clean AS artist_clean, p_p_hits.avg_danceability AS avg_danceability, p_spotify_artist_complete.artist_id AS artist_id, p_spotify_artist_complete.name AS name, p_spotify_artist_complete.followers AS followers, p_spotify_artist_complete.popularity AS popularity_artist_complete, p_spotify_artist_complete.genres AS genres, p_spotify_artist_complete.image_url AS image_url, p_spotify_artist_complete.clean_genre AS clean_genre, spotify_genre_mapping.original_genre AS original_genre, spotify_genre_mapping.mapped_genre AS mapped_genre, spotify_dataset_playlist.user_id_0 AS user_id_0, spotify_dataset_playlist.artistname_0 AS artistname_0, spotify_dataset_playlist.trackname_0 AS trackname_0, spotify_dataset_playlist.playlistname_0 AS playlistname_0, songs_normalize.artist AS artist, songs_normalize.song AS song, songs_normalize.duration_ms AS duration_ms, songs_normalize.explicit AS explicit, songs_normalize.year AS year, songs_normalize.popularity AS popularity_normalize, songs_normalize.danceability AS danceability, songs_normalize.energy AS energy, songs_normalize.key AS key, songs_normalize.loudness AS loudness, songs_normalize.mode AS mode, songs_normalize.speechiness AS speechiness, songs_normalize.acousticness AS acousticness, songs_normalize.instrumentalness AS instrumentalness, songs_normalize.liveness AS liveness, songs_normalize.valence AS valence, songs_normalize.tempo AS tempo, songs_normalize.genre AS genre, top50_from2010_2019.title AS title, top50_from2010_2019.artist AS artist_top50, top50_from2010_2019.genre AS thegenreofthetrack_0, top50_from2010_2019.year AS year_top50, top50_from2010_2019.beatsperminute AS beatsperminutethetempoofthesong_0, top50_from2010_2019.energy AS energytheenergyofasongthehigherthevaluethemoreenergtic_0, top50_from2010_2019.danceability AS danceabilitythehigherthevaluetheeasieritistodancetothissong_0, top50_from2010_2019.loudness AS loudnessdbthehigherthevaluethelouderthesong_0, top50_from2010_2019.liveness AS livenessthehigherthevaluethemorelikelythesongisaliverecording_0, top50_from2010_2019.valence AS valencethehigherthevaluethemorepositivemoodforthesong_0, top50_from2010_2019.length AS lengththedurationofthesong_0, top50_from2010_2019.acousticness AS acousticnessthehigherthevaluethemoreacousticthesongis_0, top50_from2010_2019.speechiness AS speechinessthehigherthevaluethemorespokenwordthesongcontains_0, top50_from2010_2019.popularity AS popularitythehigherthevaluethemorepopularthesongis_0 FROM (p_p_hits AS p_p_hits INNER JOIN (spotify_dataset_playlist AS spotify_dataset_playlist INNER JOIN (spotify_genre_mapping AS spotify_genre_mapping INNER JOIN (p_spotify_artist_complete AS p_spotify_artist_complete INNER JOIN (spotify_data AS spotify_data INNER JOIN top50_from2010_2019 AS top50_from2010_2019 ON spotify_data.artist = top50_from2010_2019.genre ) ON p_spotify_artist_complete.name = spotify_data.artist ) ON spotify_genre_mapping.mapped_genre = p_spotify_artist_complete.genres ) ON spotify_dataset_playlist.artistname_0 = p_spotify_artist_complete.name ) ON p_p_hits.artist_clean = spotify_dataset_playlist.artistname_0 ) INNER JOIN songs_normalize AS songs_normalize ON p_p_hits.artist_clean = songs_normalize.artist ;
+CREATE OR REPLACE VIEW todos_los_joins AS SELECT top50_from2010_2019.title AS title, top50_from2010_2019.artist AS artist_top50, top50_from2010_2019.genre AS genre_top50, top50_from2010_2019.year AS year_top50, top50_from2010_2019.beatsperminute AS beatsperminute, top50_from2010_2019.energy AS energy_top50, top50_from2010_2019.danceability AS danceability_top50, top50_from2010_2019.loudness AS loudness_top50, top50_from2010_2019.liveness AS liveness_top50, top50_from2010_2019.valence AS valence_top50, top50_from2010_2019.length AS length, top50_from2010_2019.acousticness AS acousticness_top5, top50_from2010_2019.speechiness AS speechiness_top50, top50_from2010_2019.popularity AS popularity_top50, spotify_dataset_playlist.user_id_0 AS user_id_0, spotify_dataset_playlist.artistname_0 AS artistname_0, spotify_dataset_playlist.trackname_0 AS trackname_0, spotify_dataset_playlist.playlistname_0 AS playlistname_0, p_spotify_data.artist AS artist_p_spoti_data, p_spotify_data.streams AS streams, p_spotify_data.daily AS daily, p_spotify_data.aslead_0 AS aslead_0, p_spotify_data.solo AS solo, p_spotify_data.asfeature_0 AS asfeature_0, p_spotify_data.momentum_index AS momentum_index, p_spotify_data.collab_dependency AS collab_dependency, p_spotify_data.solo_power AS solo_power, p_spotify_data.bv_anr_investment_matrix AS bv_anr_investment_matrix, p_spotify_artist_complete.artist_id AS artist_id, p_spotify_artist_complete.name AS name, p_spotify_artist_complete.followers AS followers, p_spotify_artist_complete.popularity AS popularity_spoti_complete, p_spotify_artist_complete.genres AS genres, p_spotify_artist_complete.image_url AS image_url, p_spotify_artist_complete.clean_genre AS clean_genre, songs_normalize.artist AS artist, songs_normalize.song AS song, songs_normalize.duration_ms AS duration_ms, songs_normalize.explicit AS explicit, songs_normalize.year AS year, songs_normalize.popularity AS popularity_normalize, songs_normalize.danceability AS danceability, songs_normalize.energy AS energy, songs_normalize.key AS key, songs_normalize.loudness AS loudness, songs_normalize.mode AS mode, songs_normalize.speechiness AS speechiness, songs_normalize.acousticness AS acousticness, songs_normalize.instrumentalness AS instrumentalness, songs_normalize.liveness AS liveness, songs_normalize.valence AS valence, songs_normalize.tempo AS tempo, songs_normalize.genre AS genre, p_p_hits.artist_clean AS artist_clean, p_p_hits.avg_danceability AS avg_danceability, p_p_hits.avg_energy AS avg_energy, p_p_hits.avg_tempo AS avg_tempo, spotify_genre_mapping.original_genre AS original_genre, spotify_genre_mapping.mapped_genre AS mapped_genre FROM p_p_hits AS p_p_hits INNER JOIN (spotify_genre_mapping AS spotify_genre_mapping INNER JOIN (p_spotify_artist_complete AS p_spotify_artist_complete INNER JOIN (p_spotify_data AS p_spotify_data INNER JOIN (spotify_dataset_playlist AS spotify_dataset_playlist INNER JOIN (top50_from2010_2019 AS top50_from2010_2019 INNER JOIN songs_normalize AS songs_normalize ON top50_from2010_2019.artist = songs_normalize.artist ) ON spotify_dataset_playlist.artistname_0 = top50_from2010_2019.artist ) ON p_spotify_data.artist = songs_normalize.artist ) ON p_spotify_artist_complete.name = p_spotify_data.artist ) ON spotify_genre_mapping.mapped_genre = p_spotify_artist_complete.genres ) ON p_p_hits.artist_clean = songs_normalize.artist ;
 
 ALTER VIEW todos_los_joins
- LAYOUT (top50_from2010_2019 = [705, 125, 200, 200], songs_normalize = [670, 5, 200, 200], spotify_dataset_playlist = [303, 402, 200, 200], p_spotify_artist_complete = [826, 324, 200, 200], p_p_hits = [47, 183, 200, 200], spotify_data = [292, 107, 200, 200], spotify_genre_mapping = [883, 201, 200, 200]);
+ LAYOUT (top50_from2010_2019 = [912, 152, 200, 200], spotify_dataset_playlist = [487, 118, 200, 200], p_spotify_data = [465, 42, 200, 200], p_spotify_artist_complete = [267, 194, 200, 200], songs_normalize = [870, 30, 200, 200], p_p_hits = [54, 219, 200, 200], spotify_genre_mapping = [553, 308, 200, 200]);
 
 # #######################################
 # ASSOCIATIONS of admin
