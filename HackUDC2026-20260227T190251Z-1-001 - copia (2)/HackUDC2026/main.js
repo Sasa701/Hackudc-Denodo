@@ -97,7 +97,11 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
         // Usamos la información obtenida para forzar al LLM a buscar datos reales
         const tablesContext = tablesUsed.join(", ");
         const dataPrompt = `Basándote en las tablas encontradas (${tablesContext}), busca el top 3 de canciones del año ${year}${genreText} que tengan el nivel más alto en la característica musical: ${featureValue}. 
-        IMPORTANTE: Devuélveme una justificación analítica inicial y luego, OBLIGATORIAMENTE, una tabla en formato Markdown con las columnas exactas: | Canción | Artista | Fecha de Lanzamiento | Género | . Puedes cruzar información si es necesario.`;
+        IMPORTANTE: Devuélveme una justificación analítica inicial y luego, OBLIGATORIAMENTE, una tabla en formato Markdown con las columnas exactas: | Canción | Artista | Fecha de Lanzamiento | Género | . Puedes cruzar información si es necesario.
+        REGLAS SQL DENODO: 
+        1. Si filtras por género, usa siempre expresiones amplias con ILIKE '%...%' porque pueden existir subgéneros (e.g. un artista Pop puede tener género 'dance pop'). Por lo tanto, usa \`ILIKE '%${genre === 'Cualquiera' ? 'pop' : genre}%'\` en la cláusula WHERE. Nunca uses \`=\` para géneros.
+        2. NO uses \`CAST("columna" AS FLOAT)\` ni casts numéricos similares en el ORDER BY para columnas que ya son numéricas (como danceability, energy, popularity, etc.). Úsalas directamente (e.g. \`ORDER BY "danceability" DESC\`).
+        3. El año a veces es un string y a veces un int. Usa comprobaciones tolerantes.`;
 
         console.log("FASE 2 - Obteniendo datos:", dataPrompt);
 
