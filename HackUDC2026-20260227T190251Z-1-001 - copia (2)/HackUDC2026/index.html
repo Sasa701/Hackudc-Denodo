@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Music Selector | Denodo AI SDK</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <main class="container">
+        <header>
+            <h1 class="title">Music <span>Decision Maker</span></h1>
+            <p class="subtitle">Descubre tu próxima canción favorita usando RAG (Retrieval-Augmented Generation) con
+                Denodo AI SDK</p>
+        </header>
+
+        <section class="controls glass">
+            <div class="input-group">
+                <label for="yearSelect">Año Musical</label>
+                <select id="yearSelect">
+                    <option value="2010">2010</option>
+                    <option value="2011">2011</option>
+                    <option value="2012">2012</option>
+                    <option value="2013">2013</option>
+                    <option value="2014">2014</option>
+                    <option value="2015">2015</option>
+                    <option value="2016">2016</option>
+                    <option value="2017">2017</option>
+                    <option value="2018">2018</option>
+                    <option value="2019">2019</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="genreSelect">Género Musical</label>
+                <select id="genreSelect">
+                    <option value="Cualquiera">Cualquiera</option>
+                    <option value="pop">Pop</option>
+                    <option value="hip hop">Hip Hop</option>
+                    <option value="rock">Rock</option>
+                    <option value="edm">EDM / Dance</option>
+                    <option value="latin">Latino</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="featureSelect">Característica a priorizar</label>
+                <select id="featureSelect">
+                    <option value="danceability">Más Bailable (Danceability)</option>
+                    <option value="energy">Más Enérgica (Energy)</option>
+                    <option value="acousticness">Más Acústica (Acousticness)</option>
+                    <option value="liveness">Más Directos/Vivo (Liveness)</option>
+                    <option value="valence">Más Positiva/Feliz (Valence)</option>
+                    <option value="popularity">Más Popular (Popularity)</option>
+                </select>
+            </div>
+
+            <button id="analyzeBtn" class="primary-btn">
+                <span class="btn-text">Obtener Recomendación</span>
+                <div class="loader-spinner hidden"></div>
+            </button>
+        </section>
+
+        <!-- Sección de Proceso RAG (Fase 1 y 2) -->
+        <section id="reasoningProcess" class="glass reasoning-container hidden">
+            <h2 class="section-title">Proceso de Razonamiento IA</h2>
+
+            <div class="steps-container">
+                <!-- Fase 1 -->
+                <div id="step1" class="process-step">
+                    <div class="step-icon">1</div>
+                    <div class="step-content">
+                        <h3>Fase de Descubrimiento (Metadata)</h3>
+                        <p class="step-status">Esperando inicio...</p>
+                        <div class="step-details hidden">
+                            <span class="detail-label">Tablas sugeridas para este caso:</span>
+                            <div id="suggestedTables" class="tags-container"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fase 2 -->
+                <div id="step2" class="process-step pending">
+                    <div class="step-icon">2</div>
+                    <div class="step-content">
+                        <h3>Fase de Extracción (Data)</h3>
+                        <p class="step-status">Esperando Fase 1...</p>
+                        <div class="step-details hidden">
+                            <span class="detail-label">VQL Query Generada:</span>
+                            <code id="generatedSql" class="sql-code"></code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resultados Finales -->
+        <section id="results" class="results-container">
+            <div id="statusMessage" class="status-msg hidden">
+                Iniciando análisis...
+            </div>
+
+            <div id="resultsGrid" class="results-grid hidden">
+                <div class="glass song-card full-width recommendation-card">
+                    <div class="song-header">
+                        <span class="song-title">Veredicto Final de la IA</span>
+                        <span id="badgeYearFeature" class="rank-badge">Resultados</span>
+                    </div>
+                    <div id="aiContent" class="text-dim text-lg" style="margin-top: 15px;">
+                        <!-- Aquí va la justificación -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="main.js"></script>
+</body>
+
+</html>
